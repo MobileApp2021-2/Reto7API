@@ -92,7 +92,6 @@ namespace TicTacToeAPI.Logica.LogicaDeNegocio.Hubs.Implementacion
 
         public override async Task OnDisconnectedAsync(Exception exception)
         {
-            //terminar partida eliminar 
             object groupName;
             Context.Items.TryGetValue("groupName", out groupName);
 

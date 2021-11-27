@@ -58,9 +58,8 @@ namespace TicTacToeAPI
             {
                 app.UseDeveloperExceptionPage();
             }
+
             app.UseCors("CorsPolicy");
-
-
             app.UseSwagger();
             app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "TicTacToeAPI v1"));
             app.UseHttpsRedirection();
