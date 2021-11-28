@@ -41,7 +41,7 @@ namespace TicTacToeAPI.Logica.LogicaDeNegocio.Hubs.Interfaz
         /// <param name="groupName">nombre del grupo</param>
         /// <param name="board">tablero nuevo</param>
         /// <returns></returns>
-        Task SendMessageGameOver(string groupName, BoardDto board);
+        Task SendMessageGameOver(string groupName, BoardDto board, int winner)
 
 
         /// <summary>

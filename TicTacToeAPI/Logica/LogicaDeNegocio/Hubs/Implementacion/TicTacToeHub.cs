@@ -41,7 +41,7 @@ namespace TicTacToeAPI.Logica.LogicaDeNegocio.Hubs.Implementacion
             board.Group = groupName;
             _boardLogic.UpdateBoard(boardId, board);
             await Groups.AddToGroupAsync(Context.ConnectionId, groupName);
-            await Clients.Group(groupName).SendAsync("UserJoined", board);
+            await Clients.OthersInGroup(groupName).SendAsync("UserJoined", board);
         }
 
         public async Task DeleteBoard(string groupName, string boardId)
@@ -56,10 +56,10 @@ namespace TicTacToeAPI.Logica.LogicaDeNegocio.Hubs.Implementacion
             return Clients.OthersInGroup(groupName).SendAsync("NewMovement", board);
         }
 
-        public Task SendMessageGameOver(string groupName, BoardDto board)
+        public Task SendMessageGameOver(string groupName, BoardDto board, int winner)
         {
             _boardLogic.UpdateBoard(board.Id, board);
-            return Clients.OthersInGroup(groupName).SendAsync("CheckWinner", board);
+            return Clients.OthersInGroup(groupName).SendAsync("CheckWinner", winner);
         }
 
         public async Task SendMessageLeaveRoomSecondPlayer(string groupName, string boardId)
