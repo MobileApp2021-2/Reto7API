@@ -11,6 +11,6 @@ namespace TicTacToeAPI.Logica.LogicaDeNegocio.Interfaz
         BoardDto UpdateBoard(string boardId, BoardDto board);
         BoardDto GetBoard(string boardId);
         List<BoardDto> GetAvailableBoards();
-        bool IsBoardAvailable(string boardId);
+        IsAvailableDto IsBoardAvailable(string boardId);
     }
 }

@@ -5,21 +5,23 @@ using System.Linq;
 using TicTacToeAPI.Logica.Dominio.Dto;
 using TicTacToeAPI.Persistencia.Repositorio.Interfaz;
 using TicTacToeAPI.Logica.Dominio.Configurtacion.Implementacion;
+using TicTacToeAPI.Logica.Dominio;
+using AutoMapper;
 
 namespace TicTacToeAPI.Persistencia.Repositorio.Implementacion
 {
     public class BoardRepository : IBoardRepository
     {
-        private readonly IMongoCollection<BoardDto> _boards;
+        private readonly IMongoCollection<Board> _boards;
 
         public BoardRepository(MongoSettings _mongoSettings)
         {
             var client = new MongoClient(_mongoSettings.ConnectionString);
             var database = client.GetDatabase(_mongoSettings.DatabaseName);
-            _boards = database.GetCollection<BoardDto>(_mongoSettings.BooksCollectionName);
+            _boards = database.GetCollection<Board>(_mongoSettings.BooksCollectionName);
         }
 
-        public async Task<BoardDto> CreateBoard(BoardDto board)
+        public async Task<Board> CreateBoard(Board board)
         {
             await _boards.InsertOneAsync(board);
             return board;
@@ -31,17 +33,17 @@ namespace TicTacToeAPI.Persistencia.Repositorio.Implementacion
             return result.IsAcknowledged;
         }
 
-        public  List<BoardDto> GetAvailableBoards()
+        public List<Board> GetAvailableBoards()
         {
-           return _boards.Find(board => board.Available == true).ToList();
+            return _boards.Find(board => board.Available == true).ToList();
         }
 
-        public BoardDto GetBoard(string boardId)
+        public Board GetBoard(string boardId)
         {
-            return _boards.Find<BoardDto>(board => board.Id == boardId).FirstOrDefault();
+            return _boards.Find<Board>(board => board.Id == boardId).FirstOrDefault();
         }
 
-        public BoardDto UpdateBoard(string boardId, BoardDto board)
+        public Board UpdateBoard(string boardId, Board board)
         {
             _boards.ReplaceOne(board => board.Id == boardId, board);
             return board;

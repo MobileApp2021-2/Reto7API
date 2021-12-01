@@ -4,6 +4,8 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.OpenApi.Models;
+using System.Reflection;
+using System.Text.Json.Serialization;
 using TicTacToeAPI.Logica.Dominio.Configurtacion.Implementacion;
 using TicTacToeAPI.Logica.LogicaDeNegocio.Hubs.Implementacion;
 using TicTacToeAPI.Logica.LogicaDeNegocio.Implementacion;
@@ -32,7 +34,8 @@ namespace TicTacToeAPI
             ResolvverInyeccionUnidadDeTrabajo(services);
             ConfiguracionLogicaNegocio(services);
 
-            services.AddControllers();
+            services.AddControllers(); //.AddJsonOptions(x =>
+                   // x.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.Preserve);
             services.AddCors(options =>
             {
                 options.AddPolicy("CorsPolicy",
@@ -82,6 +85,7 @@ namespace TicTacToeAPI
         private void ConfiguracionLogicaNegocio(IServiceCollection services)
         {
             services.AddTransient<IBoardLogic, BoardLogic>();
+            services.AddAutoMapper(Assembly.GetExecutingAssembly());
         }
     }
 }

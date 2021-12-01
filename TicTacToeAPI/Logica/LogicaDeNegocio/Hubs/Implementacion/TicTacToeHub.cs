@@ -16,32 +16,19 @@ namespace TicTacToeAPI.Logica.LogicaDeNegocio.Hubs.Implementacion
             _boardLogic = boardLogic;
         }
 
-        public async Task CreateBoard(string firstPlayerId)
-        {
-            BoardDto board = await _boardLogic.CreateBoard(firstPlayerId);
-            string groupName = $"grp_{board.Id}";
-            board.Group = groupName;
-            _boardLogic.UpdateBoard(board.Id, board);
-            await Groups.AddToGroupAsync(Context.ConnectionId, groupName);
-            await Clients.Group(groupName).SendAsync("CreatedBoard", board);
-            Context.Items.Add("groupName", groupName);
-            Context.Items.Add("boardId", board.Id);
-        }
-
         public async Task JoinBoard(string groupName, string boardId, string secondPlayerId)
         {
-            BoardDto board = _boardLogic.GetBoard(boardId);
-            board.SecondPlayerId = secondPlayerId;
-            board.GamesPlayed = 0;
-            board.CurrentGame = new char[9]{ '1','2','3','4','5','6','7','8','9'};
-            board.Available = false;
-            board.FirstPlayerWins = 0;
-            board.SecondPlayerWins = 0;
-            board.Ties = 0;
-            board.Group = groupName;
-            _boardLogic.UpdateBoard(boardId, board);
+            if(!String.IsNullOrWhiteSpace(secondPlayerId))
+            {
+                BoardDto board = _boardLogic.GetBoard(boardId);
+                board.SecondPlayerId = secondPlayerId;
+                board.Available = false;
+                board.Group = groupName;
+                _boardLogic.UpdateBoard(boardId, board);
+            }
             await Groups.AddToGroupAsync(Context.ConnectionId, groupName);
-            await Clients.OthersInGroup(groupName).SendAsync("UserJoined", board);
+            await Clients.OthersInGroup(groupName).SendAsync("UserJoined");
+            await Clients.All.SendAsync("RefreshBoard");
         }
 
         public async Task DeleteBoard(string groupName, string boardId)
@@ -50,32 +37,12 @@ namespace TicTacToeAPI.Logica.LogicaDeNegocio.Hubs.Implementacion
             await Groups.RemoveFromGroupAsync(Context.ConnectionId, groupName);
         }
 
-        public Task SendMessageNewMovement(string groupName, BoardDto board)
-        {
-            _boardLogic.UpdateBoard(board.Id, board);
-            return Clients.OthersInGroup(groupName).SendAsync("NewMovement", board);
-        }
-
-        public Task SendMessageGameOver(string groupName, BoardDto board, int winner)
-        {
-            _boardLogic.UpdateBoard(board.Id, board);
-            return Clients.OthersInGroup(groupName).SendAsync("CheckWinner", winner);
-        }
-
         public async Task SendMessageLeaveRoomSecondPlayer(string groupName, string boardId)
         {
-            BoardDto board = _boardLogic.GetBoard(boardId);
-            board.SecondPlayerId = null;
-            board.GamesPlayed = 0;
-            board.CurrentGame = new char[9] { '1', '2', '3', '4', '5', '6', '7', '8', '9' };
-            board.Available = false;
-            board.FirstPlayerWins = 0;
-            board.SecondPlayerWins = 0;
-            board.Ties = 0;
-            board.Group = groupName;
-            _boardLogic.UpdateBoard(boardId, board);
+            await _boardLogic.DeleteBoard(boardId);
             await Groups.RemoveFromGroupAsync(Context.ConnectionId, groupName);
-            await Clients.Group(groupName).SendAsync("SecondPlayerLeaveGame", board);
+            await Clients.Group(groupName).SendAsync("SecondPlayerLeaveGame");
+            await Clients.All.SendAsync("RefreshBoard");
         }
 
         public async Task SendMessageLeaveRoomFirstPlayer(string groupName, string boardId)
@@ -83,33 +50,29 @@ namespace TicTacToeAPI.Logica.LogicaDeNegocio.Hubs.Implementacion
             await _boardLogic.DeleteBoard(boardId);
             await Groups.RemoveFromGroupAsync(Context.ConnectionId, groupName);
             await Clients.Group(groupName).SendAsync("FirstPlayerLeaveGame");
+            await Clients.All.SendAsync("RefreshBoard");
         }
 
-        public override Task OnConnectedAsync()
+        public Task SendMessageNewMovement(string groupName, int movementPosition)
         {
-            return base.OnConnectedAsync();
+            return Clients.OthersInGroup(groupName).SendAsync("NewMovementReceive", movementPosition);
         }
 
-        public override async Task OnDisconnectedAsync(Exception exception)
+        public Task SendMessageGameOver(string groupName, string boardId, int ties, 
+            int firstWins, int secondWins, int gamesPlayed, int winner)
         {
-            object groupName;
-            Context.Items.TryGetValue("groupName", out groupName);
-
-            object boardId;
-            Context.Items.TryGetValue("boardId", out boardId);
-
-            if(groupName is string group && !String.IsNullOrWhiteSpace(group) && boardId is string board && !String.IsNullOrWhiteSpace(board))
-            {
-                await _boardLogic.DeleteBoard(board);
-                await Clients.OthersInGroup(group).SendAsync("EndGame");
-            }
-
-            await base.OnDisconnectedAsync(exception);
+            BoardDto board = _boardLogic.GetBoard(boardId);
+            board.GamesPlayed = gamesPlayed;
+            board.FirstPlayerWins = firstWins;
+            board.SecondPlayerWins = secondWins;
+            board.Ties = ties;
+            _boardLogic.UpdateBoard(boardId, board);
+            return Clients.OthersInGroup(groupName).SendAsync("CheckWinner", winner);
         }
 
-        public Task RefreshAllGames()
+        public Task SendMessageFirstPlayer(string groupName, char player)
         {
-            return Clients.All.SendAsync("RefreshGames");
+            return Clients.OthersInGroup(groupName).SendAsync("FirstPlayer", player);
         }
     }
 }

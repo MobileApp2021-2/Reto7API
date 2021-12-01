@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using System.Threading.Tasks;
 using TicTacToeAPI.Logica.LogicaDeNegocio.Interfaz;
 
 namespace TicTacToeAPI.Controllers
@@ -22,12 +23,17 @@ namespace TicTacToeAPI.Controllers
         }
 
 
-        [HttpGet("IsBoardAvailable")]
+        [HttpGet("IsBoardAvailable/{boardId}")]
         public IActionResult IsBoardAvailable(string boardId)
         {
             return Ok(_boardLogic.IsBoardAvailable(boardId));
         }
 
-
+        [HttpPost("CreateBoard/{firstPlayerId}")]
+        public async Task<IActionResult> CreateBoard(string firstPlayerId)
+        {
+            var response = await _boardLogic.CreateBoard(firstPlayerId);
+            return Ok(response);
+        }
     }
 }
